@@ -10,25 +10,38 @@ import (
 )
 
 func main() {
+
+	quiet := flag.Bool("q", false, "Don't print anything to stderr")
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: yamlcheck [options] <file>\n\n")
+		flag.PrintDefaults()
+	}
+
 	flag.Parse()
 
 	if len(flag.Args()) == 0 {
-		fmt.Println("Usage: yamlcheck <file>")
+		flag.Usage()
 		os.Exit(1)
 	}
 
 	bytes, err := ioutil.ReadFile(flag.Arg(0))
 	if err != nil {
-		fmt.Printf("Error opening file %s: %v\n", flag.Arg(0), err)
+		if !*quiet {
+			fmt.Fprintf(os.Stderr, "Error opening file %s: %v\n", flag.Arg(0), err)
+		}
 		os.Exit(2)
 	}
 
 	var out interface{}
 	err = yaml.Unmarshal(bytes, &out)
 	if err != nil {
-		fmt.Printf("YAML check failed: %v\n", err)
+		if !*quiet {
+			fmt.Fprintf(os.Stderr, "YAML check failed: %v\n", err)
+		}
 		os.Exit(3)
 	}
 
-	fmt.Println("YAML check ok")
+	if !*quiet {
+		fmt.Fprintf(os.Stderr, "YAML check ok\n")
+	}
 }
